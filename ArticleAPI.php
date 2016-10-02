@@ -19,6 +19,7 @@ class GetArticle{
 
         try {
             $conn = new PDO("mysql:host=$serverName;dbname=$db", $username, $password,array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+            
             //set the PDO error mode to exception
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             //echo "Connected successfully";
@@ -80,15 +81,15 @@ class GetArticle{
     }
 }
 
-$getArticle;
+
 
 if(isset($_REQUEST['ACCESS_TOKEN']) ){
     
-    if($_REQUEST['ACCESS_TOKEN']=="keyToAccess"){
-        //$getArticle = new GetArticle();
+    if($_REQUEST['ACCESS_TOKEN']=="keyToAccess"){        
         if(isset($_REQUEST['queryName']) && $_REQUEST['queryName'] == "getLastArticle"){
+
             GetArticle::getInstance()->getLastArticle();
-            //echo "Here is last article...!";
+            
         }
         else{
             GetArticle::getInstance()->getAllArticle();    
@@ -121,9 +122,7 @@ else{
     echo json_encode($msg, JSON_PRETTY_PRINT);
 }
 
-/*if(isset($_REQUEST['greeding'])){
-    echo "Hello";
-}*/
+
 
 
 
