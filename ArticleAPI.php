@@ -81,13 +81,19 @@ class GetArticle{
             $stmt->bindParam(":articleId", $aricleId, PDO::PARAM_INT);
             $stmt->execute();
 
-            $result = $stmt->fetch();
-            $stmt->closeCursor();
-            $conn->commit();
+            if($stmt->rowCount() > 0){
+                $result = $stmt->fetch();
+                $stmt->closeCursor();
+                $conn->commit();
 
-            //JSON Production Like API
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
+                //JSON Production Like API
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
+            }
+            else{
+                echo "No record is found with your search parameter";
+            }
+            
 
         } catch (PDOException $pdoe) {
             $conn->rollBack();
