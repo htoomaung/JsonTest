@@ -1,20 +1,38 @@
 <?php
+class GetArticle{
+    
+    public static function getInstance(){
+        $objInstance = new GetArticle();
+        return $objInstance;
+    }
 
-class GetArticle
-{
-    public function __construct(){
+    public function __construct(){        
         
+    }
+
+    private function getDBConnection(){
         $serverName = "localhost";
         $username ="root";
         $password = "";
-        $db = "test"; 
+        $db = "test";
+        $conn = ""; 
 
         try {
             $conn = new PDO("mysql:host=$serverName;dbname=$db", $username, $password,array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
-            
             //set the PDO error mode to exception
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             //echo "Connected successfully";
+            
+        } catch (PDOException $pdoe) {
+            echo "Connection failed: ". $pdoe->getMessage();
+        }
+        return $conn;           
+    }
+    public function getAllArticle(){
+        try {
+            $conn = $this->getDBConnection();
+            
+            
 
             //Transaction Start
             $conn->beginTransaction();
@@ -24,20 +42,41 @@ class GetArticle
             // set the resulting array to associative
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC); 
             $stmt->closeCursor();
-
+            $conn->commit();
             
             //JSON Production Like API
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
             
 
-            $conn->commit();
+            
 
 
         } catch (PDOException $pdoe) {
             $conn->rollBack();
-            echo "Connection failed: ". $pdoe->getMessage();
+            echo "Failed to retrieve data: ". $pdoe->getMessage();
         }        
+    }
+
+    public function getLastArticle(){
+        try {
+            $conn = $this->getDBConnection();
+            $conn->beginTransaction();
+            $stmt = $conn->prepare("SELECT * FROM tbl_article ORDER BY article_id;");
+            $stmt->execute();
+
+            $result = $stmt->fetch();
+            $stmt->closeCursor();
+            $conn->commit();
+
+            //JSON Production Like API
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
+
+        } catch (PDOException $e) {
+            echo "Fail to retrieve last article: ".$pdoe->getMessage();
+        }
+
     }
 }
 
@@ -46,7 +85,15 @@ $getArticle;
 if(isset($_REQUEST['ACCESS_TOKEN']) ){
     
     if($_REQUEST['ACCESS_TOKEN']=="keyToAccess"){
-        $getArticle = new GetArticle();
+        //$getArticle = new GetArticle();
+        if(isset($_REQUEST['queryName']) && $_REQUEST['queryName'] == "getLastArticle"){
+            GetArticle::getInstance()->getLastArticle();
+            //echo "Here is last article...!";
+        }
+        else{
+            GetArticle::getInstance()->getAllArticle();    
+        }
+        
     }
     else{
         $msg = array(
