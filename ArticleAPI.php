@@ -1,5 +1,10 @@
 <?php
 class GetArticle{
+    /*
+    * Author Name: Htoo Maung Thait
+    * email: robinhtoo@gmail.com
+    * Last Editi Date: 2016-10-3 01:06:00
+    */
     
     public static function getInstance(){
         $objInstance = new GetArticle();
