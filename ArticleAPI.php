@@ -105,6 +105,10 @@ class GetArticle{
             echo "Fail to retrieve last article: ".$pdoe->getMessage();
         }        
     }
+
+    public function showJsonErrorMsg(){
+        
+    }
 }
 
 
