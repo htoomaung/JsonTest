@@ -6,9 +6,7 @@ class GetArticle{
         return $objInstance;
     }
 
-    public function __construct(){        
-        
-    }
+    public function __construct(){}
 
     private function getDBConnection(){
         $serverName = "localhost";
@@ -33,8 +31,6 @@ class GetArticle{
         try {
             $conn = $this->getDBConnection();
             
-            
-
             //Transaction Start
             $conn->beginTransaction();
             $stmt = $conn->prepare("SELECT * FROM tbl_article;");
@@ -49,10 +45,6 @@ class GetArticle{
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
             
-
-            
-
-
         } catch (PDOException $pdoe) {
             $conn->rollBack();
             echo "Failed to retrieve data: ". $pdoe->getMessage();
