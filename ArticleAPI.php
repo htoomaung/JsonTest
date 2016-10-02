@@ -66,12 +66,36 @@ class GetArticle{
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
 
-        } catch (PDOException $e) {
+        } catch (PDOException $pdoe) {
+            $conn->rollBack();
             echo "Fail to retrieve last article: ".$pdoe->getMessage();
         }
 
     }
+
+    public function getArticleById($aricleId){
+        try {
+            $conn = $this->getDBConnection();
+            $conn->beginTransaction();
+            $stmt = $conn->prepare("SELECT * FROM tbl_article WHERE article_id = :articleId;");
+            $stmt->bindParam(":articleId", $aricleId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $result = $stmt->fetch();
+            $stmt->closeCursor();
+            $conn->commit();
+
+            //JSON Production Like API
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
+
+        } catch (PDOException $pdoe) {
+            $conn->rollBack();
+            echo "Fail to retrieve last article: ".$pdoe->getMessage();
+        }        
+    }
 }
+
 
 
 
@@ -81,6 +105,15 @@ if(isset($_REQUEST['ACCESS_TOKEN']) ){
         if(isset($_REQUEST['queryName']) && $_REQUEST['queryName'] == "getLastArticle"){
 
             GetArticle::getInstance()->getLastArticle();
+            
+        }
+        elseif(isset($_REQUEST['queryName']) && $_REQUEST['queryName'] == "getArticleById") {
+            if(isset($_REQUEST['articleId'])){
+                GetArticle::getInstance()->getArticleById($_REQUEST['articleId']);
+            }
+            else{
+                echo "please provide article Id";
+            }
             
         }
         else{
