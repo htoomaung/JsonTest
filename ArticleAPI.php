@@ -1,50 +1,132 @@
 <?php
+class GetArticle{
     
-    $serverName = "localhost";
-    $username ="root";
-    $password = "";
-    $db = "test"; 
+    public static function getInstance(){
+        $objInstance = new GetArticle();
+        return $objInstance;
+    }
 
-    try {
-        $conn = new PDO("mysql:host=$serverName;dbname=$db", $username, $password,array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
-        //set the PDO error mode to exception
-        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        //echo "Connected successfully";
+    public function __construct(){        
+        
+    }
 
-        $conn->beginTransaction();
-        $stmt = $conn->prepare("SELECT * FROM tbl_article;");
-        $stmt->execute();
+    private function getDBConnection(){
+        $serverName = "localhost";
+        $username ="root";
+        $password = "";
+        $db = "test";
+        $conn = ""; 
 
-        // set the resulting array to associative
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC); 
-        $stmt->closeCursor();
-
-        /*header('Content-type: text/html; charset=utf-8');    
-        print_r($result);*/
-        //var_dump($result);
-
-        /*header('Content-type: text/html; charset=utf-8');
-        $i = 0;
-        foreach ($result as $row) {
-            echo ++$i;
-            echo $row['article_title']."<br/>";
-            echo "str length:".mb_strlen($row['article_title'])."<br/>";
+        try {
+            $conn = new PDO("mysql:host=$serverName;dbname=$db", $username, $password,array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+            //set the PDO error mode to exception
+            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            //echo "Connected successfully";
+            
+        } catch (PDOException $pdoe) {
+            echo "Connection failed: ". $pdoe->getMessage();
+        }
+        return $conn;           
+    }
+    public function getAllArticle(){
+        try {
+            $conn = $this->getDBConnection();
+            
             
 
-        }*/
+            //Transaction Start
+            $conn->beginTransaction();
+            $stmt = $conn->prepare("SELECT * FROM tbl_article;");
+            $stmt->execute();
 
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
-        //echo json_encode($result);
+            // set the resulting array to associative
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC); 
+            $stmt->closeCursor();
+            $conn->commit();
+            
+            //JSON Production Like API
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
+            
 
-        $conn->commit();
+            
 
 
-    } catch (PDOException $pdoe) {
-        $conn->rollBack();
-        echo "Connection failed: ". $pdoe->getMessage();
+        } catch (PDOException $pdoe) {
+            $conn->rollBack();
+            echo "Failed to retrieve data: ". $pdoe->getMessage();
+        }        
+    }
+
+    public function getLastArticle(){
+        try {
+            $conn = $this->getDBConnection();
+            $conn->beginTransaction();
+            $stmt = $conn->prepare("SELECT * FROM tbl_article ORDER BY article_id;");
+            $stmt->execute();
+
+            $result = $stmt->fetch();
+            $stmt->closeCursor();
+            $conn->commit();
+
+            //JSON Production Like API
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
+
+        } catch (PDOException $e) {
+            echo "Fail to retrieve last article: ".$pdoe->getMessage();
+        }
+
+    }
+}
+
+$getArticle;
+
+if(isset($_REQUEST['ACCESS_TOKEN']) ){
+    
+    if($_REQUEST['ACCESS_TOKEN']=="keyToAccess"){
+        //$getArticle = new GetArticle();
+        if(isset($_REQUEST['queryName']) && $_REQUEST['queryName'] == "getLastArticle"){
+            GetArticle::getInstance()->getLastArticle();
+            //echo "Here is last article...!";
+        }
+        else{
+            GetArticle::getInstance()->getAllArticle();    
+        }
+        
+    }
+    else{
+        $msg = array(
+                    array(
+                        'status' => "error", 
+                        'msg'   => "Cannot access API; provided invalid ACCESS_TOKEN"
+                        )
+            );
+
+        header("Content-Type: application/json; charset=utf8");
+        echo json_encode($msg, JSON_PRETTY_PRINT);    
     }
 
     
-    
+}
+else{
+    $msg = array(
+                array(
+                    'status' => "error", 
+                    'msg'   => "Cannot access API; need an ACCESS_TOKEN"
+                    )
+            );
+
+    header("Content-Type: application/json; charset=utf8");
+    echo json_encode($msg, JSON_PRETTY_PRINT);
+}
+
+/*if(isset($_REQUEST['greeding'])){
+    echo "Hello";
+}*/
+
+
+
+
+
 
