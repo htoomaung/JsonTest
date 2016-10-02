@@ -1,60 +1,85 @@
 <?php
 
-class MyDestructableClass {
-   function __construct() {
-       print "In constructor\n";
-       $this->name = "MyDestructableClass";
-   }
+class GetArticle
+{
+    public function __construct(){
+        
+        $serverName = "localhost";
+        $username ="root";
+        $password = "";
+        $db = "test"; 
 
-   function __destruct() {
-       print "Destroying " . $this->name . "\n";
-   }
+        try {
+            $conn = new PDO("mysql:host=$serverName;dbname=$db", $username, $password,array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+            
+            //set the PDO error mode to exception
+            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            //echo "Connected successfully";
+
+            //Transaction Start
+            $conn->beginTransaction();
+            $stmt = $conn->prepare("SELECT * FROM tbl_article;");
+            $stmt->execute();
+
+            // set the resulting array to associative
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC); 
+            $stmt->closeCursor();
+
+            
+            //JSON Production Like API
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
+            
+
+            $conn->commit();
+
+
+        } catch (PDOException $pdoe) {
+            $conn->rollBack();
+            echo "Connection failed: ". $pdoe->getMessage();
+        }        
+    }
 }
 
-$obj = new MyDestructableClass();
+$getArticle;
 
-
-/*
-
-$serverName = "localhost";
-$username ="root";
-$password = "";
-$db = "test"; 
-
-try {
-    $conn = new PDO("mysql:host=$serverName;dbname=$db", $username, $password,array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+if(isset($_REQUEST['ACCESS_TOKEN']) ){
     
-    //set the PDO error mode to exception
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    //echo "Connected successfully";
+    if($_REQUEST['ACCESS_TOKEN']=="keyToAccess"){
+        $getArticle = new GetArticle();
+    }
+    else{
+        $msg = array(
+                    array(
+                        'status' => "error", 
+                        'msg'   => "Cannot access API; provided invalid ACCESS_TOKEN"
+                        )
+            );
 
-    //Transaction Start
-    $conn->beginTransaction();
-    $stmt = $conn->prepare("SELECT * FROM tbl_article;");
-    $stmt->execute();
-
-    // set the resulting array to associative
-    $result = $stmt->fetchAll(PDO::FETCH_ASSOC); 
-    $stmt->closeCursor();
+        header("Content-Type: application/json; charset=utf8");
+        echo json_encode($msg, JSON_PRETTY_PRINT);    
+    }
 
     
-    //JSON Production Like API
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
-    
+}
+else{
+    $msg = array(
+                array(
+                    'status' => "error", 
+                    'msg'   => "Cannot access API; need an ACCESS_TOKEN"
+                    )
+            );
 
-    $conn->commit();
+    header("Content-Type: application/json; charset=utf8");
+    echo json_encode($msg, JSON_PRETTY_PRINT);
+}
+
+/*if(isset($_REQUEST['greeding'])){
+    echo "Hello";
+}*/
 
 
-} catch (PDOException $pdoe) {
-    $conn->rollBack();
-    echo "Connection failed: ". $pdoe->getMessage();
-}    
-        
-    
-    
 
-    
-    
 
-*/
+
+
